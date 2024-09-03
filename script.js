@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         translations = translations.filter(t => t > twoHoursAgo);
         
-        if (translations.length >= 500) {
+        if (translations.length >= 1000) {
             updateButtonState(false);
             return false;
         }
@@ -57,8 +57,10 @@ document.addEventListener('DOMContentLoaded', () => {
         translateButton.disabled = true;
         translateButton.textContent = 'Translating...';
 
+        const url = '/translate';
+
         try {
-            const response = await fetch('/translate', {
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -77,7 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
             calmOutput.value = result.translatedText;
         } catch (error) {
             console.error('Error:', error);
-            alert('An error occurred while translating. Please try again.');
+            if (error instanceof TypeError && error.message === 'Failed to fetch') {
+                alert('Network error. Please check your internet connection and try again.');
+            } else {
+                alert('An error occurred while translating. Please try again.');
+            }
         } finally {
             translateButton.disabled = false;
             translateButton.textContent = 'Be nice';

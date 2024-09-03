@@ -1,15 +1,24 @@
 const express = require('express');
 const axios = require('axios');
 const bodyParser = require('body-parser');
+const cors = require('cors');  // Add this line
 require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 3000;
 
-app.use(express.static('public'));
+app.use(cors());  // Add this line
+app.use(express.static('.'));
 app.use(bodyParser.json());
 
+app.use((req, res, next) => {
+    console.log(`Received ${req.method} request for ${req.url}`);
+    next();
+});
+
 app.post('/translate', async (req, res) => {
+    console.log('Received request to /translate');
+    console.log('Request body:', req.body);
     try {
         const { text, formal } = req.body;
 
@@ -17,9 +26,12 @@ app.post('/translate', async (req, res) => {
             return res.status(400).json({ error: 'Invalid input' });
         }
 
-        const prompt = formal
-            ? 'You are a communication expert specializing in rephrasing. Your task is to transform emotionally charged, angry, or impolite messages into calm, constructive, and professional communications - like talking to a colleague. Identify the core message and underlying concerns in the original text, then rephrase the content using neutral, respectful language while preserving the essential meaning. Remove any insults, profanity, or aggressive language, and structure the response to address the main points in a logical, clear manner. Maintain the original language of the input text. If the original message contains constructive criticism or valid complaints, preserve them in a more diplomatic tone. Aim for a tone that is calm, assertive (not aggressive) and solution-oriented. Keep length of response the same as length of input.'
-            : 'You are a communication expert specializing in rephrasing. Your task is to transform emotionally charged, angry, or impolite messages into friendly, calm, constructive communications. – like talking to a good friend.  Identify the core message and underlying concerns in the original text, then rephrase the content using neutral, friendly language while preserving the essential meaning. Remove any insults, profanity, or aggressive language, and structure the response to address the main points in a logical, clear manner.  Maintain the original language of the input text. If the original message contains constructive criticism or valid complaints, preserve them in a more diplomatic tone. Aim for a tone that is calm, assertive (not aggressive), and solution-oriented. Keep length of response the same as length of input.';
+        let prompt;
+        if (formal) {
+            prompt = "You are a communication expert specializing in rephrasing...";
+        } else {
+            prompt = "You are a communication expert adept at rephrasing...";
+        }
 
         const openaiResponse = await axios.post(
             'https://api.openai.com/v1/chat/completions',
@@ -44,9 +56,26 @@ app.post('/translate', async (req, res) => {
         const translatedText = openaiResponse.data.choices[0].message.content.trim();
         res.json({ translatedText });
     } catch (error) {
-        console.error('Error:', error);
+        if (error.response) {
+            console.error('Error response data:', error.response.data);
+            console.error('Error response status:', error.response.status);
+            console.error('Error response headers:', error.response.headers);
+        } else if (error.request) {
+            console.error('Error request:', error.request);
+        } else {
+            console.error('Error message:', error.message);
+        }
         res.status(500).json({ error: 'An error occurred while translating' });
     }
+});
+
+app.use((req, res, next) => {
+    console.log(`404 - Not Found: ${req.method} ${req.originalUrl}`);
+    res.status(404).send('404 - Not Found');
+});
+
+app.get('/test', (req, res) => {
+    res.send('Server is running');
 });
 
 app.listen(port, () => {
