@@ -17,26 +17,22 @@ app.use((req, res, next) => {
 });
 
 app.post('/translate', async (req, res) => {
-    console.log('Received request to /translate');
-    console.log('Request body:', req.body);
     try {
-        const { text, formal } = req.body;
-
-        if (!text || text.length > 1000) {
-            return res.status(400).json({ error: 'Invalid input' });
-        }
+        const { text, formal, mode } = req.body;
 
         let prompt;
-        if (formal) {
-            prompt = "You are a communication expert specializing in rephrasing...";
+        if (mode === 'nice') {
+            prompt = `You are a polite translator. Your task is to translate the following ${formal ? 'formal' : 'informal'} text into a polite version while maintaining the original meaning:`;
+        } else if (mode === 'mean') {
+            prompt = "You are a mean translator. Your task is to translate the following text into a mean, edgy but slightly sarcastic and funny version while maintaining the original meaning:. Do not abuse race, gender, religion, or any other identity.";
         } else {
-            prompt = "You are a communication expert adept at rephrasing...";
+            return res.status(400).json({ error: 'Invalid mode' });
         }
 
         const openaiResponse = await axios.post(
             'https://api.openai.com/v1/chat/completions',
             {
-                model: 'gpt-4',
+                model: "gpt-4",
                 messages: [
                     { role: 'system', content: prompt },
                     { role: 'user', content: text }
@@ -56,16 +52,8 @@ app.post('/translate', async (req, res) => {
         const translatedText = openaiResponse.data.choices[0].message.content.trim();
         res.json({ translatedText });
     } catch (error) {
-        if (error.response) {
-            console.error('Error response data:', error.response.data);
-            console.error('Error response status:', error.response.status);
-            console.error('Error response headers:', error.response.headers);
-        } else if (error.request) {
-            console.error('Error request:', error.request);
-        } else {
-            console.error('Error message:', error.message);
-        }
-        res.status(500).json({ error: 'An error occurred while translating' });
+        console.error('Error:', error);
+        res.status(500).json({ error: 'An error occurred while processing' });
     }
 });
 
@@ -78,6 +66,6 @@ app.get('/test', (req, res) => {
     res.send('Server is running');
 });
 
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+app.listen(3000, '0.0.0.0', () => {
+    console.log('Server is running on port 3000');
 });

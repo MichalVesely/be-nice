@@ -20,9 +20,13 @@
         </header>
         <main>
             <section class="input-section">
-                <textarea id="rageInput" placeholder="Go crazy here..." maxlength="1000"></textarea>
+                <div class="tabs">
+                    <button class="tab active" data-mode="nice">Be nice</button>
+                    <button class="tab" data-mode="mean">Be mean</button>
+                </div>
+                <textarea id="inputText" placeholder="Go crazy here..." maxlength="1000"></textarea>
                 <div class="controls-container">
-                    <button id="translateButton">Be nice</button>
+                    <button id="translateButton">Translate</button>
                     <div class="switch-container">
                         <label class="switch">
                             <input type="checkbox" id="formalSwitch">
