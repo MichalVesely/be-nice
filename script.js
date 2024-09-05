@@ -109,3 +109,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateUI();
 });
+
+const copyButton = document.getElementById('copyButton');
+
+copyButton.addEventListener('click', () => {
+    const textToCopy = calmOutput.value;
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        // Optional: Provide visual feedback that the text was copied
+        const originalText = copyButton.innerHTML;
+        copyButton.innerHTML = 'Copied!';
+        setTimeout(() => {
+            copyButton.innerHTML = originalText;
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy text: ', err);
+    });
+});
